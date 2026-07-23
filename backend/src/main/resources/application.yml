@@ -14,6 +14,11 @@ spring:
     cache: false
     prefix: classpath:/templates/
     suffix: .html
+  web:
+    resources:
+      static-locations:
+        - classpath:/static/
+        - file:./static/
 
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml
@@ -34,7 +39,7 @@ docsx:
   onlyoffice-custom-path: ${DOCSX_ONLYOFFICE_CUSTOM:classpath:/onlyoffice-custom/}
   jwt-secret: ${DOCSX_JWT_SECRET:docsx-dev-secret-key-please-change}
   task:
-    thread-pool-size: 4
+    thread-pool-size: ${DOCSX_THREAD_POOL:4}
     expire-hours: 24
     max-file-size-mb: 100
   aspose:

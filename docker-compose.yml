@@ -5,11 +5,13 @@ services:
     build: .
     container_name: docsx
     ports:
-      - "8080:8080"
+      - "${PORT:-8080}:8080"
     volumes:
       - docsx-data:/app/data
+      - docsx-logs:/app/logs
     environment:
-      - DOCSX_JWT_SECRET=your-production-jwt-secret-change-this
+      - DOCSX_JWT_SECRET=${DOCSX_JWT_SECRET:-your-production-jwt-secret-change-this}
+      - JAVA_OPTS=${JAVA_OPTS:--Xms256m -Xmx1g}
       - TZ=Asia/Shanghai
     restart: unless-stopped
     healthcheck:
@@ -18,6 +20,28 @@ services:
       timeout: 5s
       retries: 3
 
+  # MySQL（可选，默认使用 SQLite）
+  # 启用方法: docker compose --profile mysql up
+  mysql:
+    image: mysql:8.0
+    container_name: docsx-mysql
+    profiles: ["mysql"]
+    ports:
+      - "3306:3306"
+    volumes:
+      - docsx-mysql:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-docsx123}
+      - MYSQL_DATABASE=docsx
+      - MYSQL_USER=docsx
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-docsx123}
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+
 volumes:
   docsx-data:
+    driver: local
+  docsx-logs:
+    driver: local
+  docsx-mysql:
     driver: local
