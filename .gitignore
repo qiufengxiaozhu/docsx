@@ -30,6 +30,4 @@ logs/
 .env
 .env.local
 
-# OnlyOffice WASM (大文件单独管理)
-onlyoffice/9.3.*
-onlyoffice/*.wasm
+# OnlyOffice 资源随项目管理，不排除

@@ -45,14 +45,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN mkdir -p /app/data/files /app/data/fonts /app/logs
 
 # 暴露端口
-EXPOSE 8080
+EXPOSE 8999
 
 # 数据卷
 VOLUME ["/app/data", "/app/logs"]
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-    CMD curl -f http://localhost:8080/actuator/health || exit 1
+    CMD curl -f http://localhost:8999/actuator/health || exit 1
 
 # 启动（JVM 参数可通过 JAVA_OPTS 环境变量覆盖）
 ENV JAVA_OPTS="-Xms256m -Xmx512m"
