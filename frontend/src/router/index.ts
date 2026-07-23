@@ -23,4 +23,17 @@ const router = createRouter({
   ]
 })
 
+router.beforeEach((to, _from, next) => {
+  if (to.path === '/login') {
+    next()
+    return
+  }
+  const token = localStorage.getItem('docsx_token')
+  if (!token) {
+    next('/login')
+  } else {
+    next()
+  }
+})
+
 export default router
