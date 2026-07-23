@@ -1,12 +1,16 @@
 <template>
   <el-container style="height: 100vh">
-    <el-aside width="200px" style="background: #304156">
+    <el-aside width="220px" style="background: #1e1e2d">
       <div class="logo">Docsx</div>
-      <el-menu :default-active="$route.path" router background-color="#304156"
-               text-color="#bfcbd9" active-text-color="#409eff">
+      <el-menu :default-active="$route.path" router background-color="#1e1e2d"
+               text-color="#9ca3af" active-text-color="#fff">
         <el-menu-item index="/dashboard">
           <el-icon><Odometer /></el-icon>
           <span>仪表盘</span>
+        </el-menu-item>
+        <el-menu-item index="/compare" class="menu-highlight">
+          <el-icon><DocumentCopy /></el-icon>
+          <span>文档比对</span>
         </el-menu-item>
         <el-menu-item index="/apps">
           <el-icon><Grid /></el-icon>
@@ -49,7 +53,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { Odometer, Grid, List, Edit, Setting, ArrowDown } from '@element-plus/icons-vue'
+import { Odometer, Grid, List, Edit, Setting, ArrowDown, DocumentCopy } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -64,11 +68,30 @@ const handleCommand = (cmd: string) => {
 
 <style scoped>
 .logo {
-  padding: 16px;
+  padding: 20px 16px;
   color: #fff;
-  font-size: 20px;
-  font-weight: bold;
+  font-size: 22px;
+  font-weight: 700;
   text-align: center;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  letter-spacing: -0.5px;
+  background: rgba(79,70,229,0.15);
+}
+
+:deep(.el-menu) {
+  border-right: none !important;
+}
+
+:deep(.el-menu-item) {
+  margin: 4px 8px;
+  border-radius: 8px;
+  height: 44px;
+}
+
+:deep(.el-menu-item.is-active) {
+  background: linear-gradient(135deg, #4F46E5, #7C3AED) !important;
+}
+
+:deep(.el-menu-item:hover:not(.is-active)) {
+  background: rgba(255,255,255,0.05) !important;
 }
 </style>

@@ -14,6 +14,7 @@ const router = createRouter({
       redirect: '/dashboard',
       children: [
         { path: 'dashboard', name: 'Dashboard', component: () => import('../views/dashboard/index.vue') },
+        { path: 'compare', name: 'Compare', component: () => import('../views/compare/index.vue') },
         { path: 'apps', name: 'Apps', component: () => import('../views/apps/index.vue') },
         { path: 'tasks', name: 'Tasks', component: () => import('../views/tasks/index.vue') },
         { path: 'fonts', name: 'Fonts', component: () => import('../views/fonts/index.vue') },
