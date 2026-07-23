@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  docsx:
+    build: .
+    container_name: docsx
+    ports:
+      - "8080:8080"
+    volumes:
+      - docsx-data:/app/data
+    environment:
+      - DOCSX_JWT_SECRET=your-production-jwt-secret-change-this
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  docsx-data:
+    driver: local

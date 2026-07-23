@@ -1,0 +1,35 @@
+# Maven
+target/
+*.jar
+*.war
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+
+# Node
+node_modules/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data
+data/
+logs/
+*.db
+
+# Env
+.env
+.env.local
+
+# OnlyOffice WASM (大文件单独管理)
+onlyoffice/9.3.*
+onlyoffice/*.wasm

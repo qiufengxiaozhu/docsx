@@ -1,0 +1,42 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: docsx
+  profiles:
+    active: ${DB_TYPE:sqlite}
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 400MB
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.docsx.model.entity
+  configuration:
+    map-underscore-to-camel-case: true
+
+logging:
+  file:
+    name: logs/docsx.log
+  level:
+    com.docsx: DEBUG
+
+docsx:
+  data-dir: ${DOCSX_DATA_DIR:./data}
+  file-store: ${DOCSX_FILE_STORE:./data/files}
+  onlyoffice-path: ${DOCSX_ONLYOFFICE_PATH:classpath:/onlyoffice/}
+  onlyoffice-custom-path: ${DOCSX_ONLYOFFICE_CUSTOM:classpath:/onlyoffice-custom/}
+  jwt-secret: ${DOCSX_JWT_SECRET:docsx-dev-secret-key-please-change}
+  task:
+    thread-pool-size: 4
+    expire-hours: 24
+    max-file-size-mb: 100
+  aspose:
+    license-path: classpath:aspose-license.xml
+    font-dir: ${DOCSX_FONT_DIR:./data/fonts}
