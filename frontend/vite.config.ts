@@ -10,14 +10,14 @@ export default defineConfig({
     }
   },
   server: {
-    port: 3000,
+    port: 8998,
     proxy: {
       '/admin/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8999',
         changeOrigin: true
       },
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8999',
         changeOrigin: true
       }
     }
