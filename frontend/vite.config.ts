@@ -19,6 +19,10 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8999',
         changeOrigin: true
+      },
+      '/view': {
+        target: 'http://localhost:8999',
+        changeOrigin: true
       }
     }
   },
