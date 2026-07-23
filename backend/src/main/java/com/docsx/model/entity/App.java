@@ -19,11 +19,12 @@ import java.time.LocalDateTime;
 public class App {
     @TableId(type = IdType.AUTO)
     private Long id;
-    private String appId;
     private String appName;
+    private String appKey;
     private String appSecret;
     private Integer status;
-    private String remark;
+    private String description;
+    private String callbackUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

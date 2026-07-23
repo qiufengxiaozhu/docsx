@@ -2,66 +2,515 @@
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>文档比对结果</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文档比对 - docsx</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; overflow: hidden; height: 100vh; }
-        .top-bar { height: 44px; background: #fff; border-bottom: 1px solid #e8e8e8; display: flex; align-items: center; padding: 0 16px; font-size: 13px; }
-        .main-body { display: flex; height: calc(100vh - 44px); }
-        .doc-area { flex: 1; display: flex; position: relative; min-width: 0; }
-        .doc-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; border-right: 1px solid #e8e8e8; }
-        .doc-panel:last-of-type { border-right: none; }
-        .doc-panel .panel-header { height: 32px; background: #fafafa; border-bottom: 1px solid #e8e8e8; display: flex; align-items: center; padding: 0 12px; font-size: 12px; color: #888; }
-        .doc-panel .panel-body { flex: 1; overflow: hidden; background: #e8eaed; }
-        .doc-panel .panel-body iframe { width: 100%; height: 100%; border: none; }
-        .diff-panel { width: 308px; min-width: 308px; background: #fff; border-left: 1px solid #E8EBEF; display: flex; flex-direction: column; transition: width 0.3s, min-width 0.3s; }
-        .diff-panel.collapsed { width: 0; min-width: 0; overflow: hidden; border-left: none; }
-        .diff-panel-toggle { position: absolute; right: 308px; top: 50%; transform: translateY(-50%); width: 20px; height: 48px; background: #fff; border: 1px solid #e8e8e8; border-right: none; border-radius: 4px 0 0 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #888; z-index: 20; transition: right 0.3s; }
-        .diff-panel-toggle.collapsed { right: 0; }
-        .diff-panel-header { padding: 12px 16px; border-bottom: 1px solid #e8e8e8; font-size: 14px; font-weight: 500; }
-        .diff-list { flex: 1; overflow-y: auto; padding: 8px 0; }
-        .loading-center { display: flex; align-items: center; justify-content: center; height: 100%; color: #888; }
+        html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+        .header {
+            height: 48px;
+            background: #1f2937;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            font-size: 14px;
+            gap: 16px;
+        }
+        .header .title { font-weight: 600; font-size: 16px; }
+        .header .file-name { color: #94a3b8; font-size: 13px; }
+        .header .similarity { color: #4ade80; margin-left: auto; }
+
+        .container {
+            display: flex;
+            height: calc(100% - 48px);
+        }
+
+        .panel {
+            flex: 1;
+            border-right: 1px solid #e2e8f0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .panel:last-child { border-right: none; }
+
+        .panel-header {
+            height: 36px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-size: 13px;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .panel-body {
+            flex: 1;
+            overflow: auto;
+            padding: 12px;
+        }
+
+        .diff-panel {
+            flex: 0 0 360px;
+            min-width: 300px;
+            max-width: 480px;
+            background: #fafbfc;
+        }
+        .diff-panel .panel-body { padding: 0; }
+
+        .diff-group {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .diff-group:hover { background: #f1f5f9; }
+        .diff-group.active { background: #eff6ff; border-left: 3px solid #3b82f6; }
+
+        .diff-type {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-right: 8px;
+        }
+        .diff-type.add { background: #dcfce7; color: #166534; }
+        .diff-type.delete { background: #fee2e2; color: #991b1b; }
+        .diff-type.modify { background: #fef3c7; color: #92400e; }
+
+        .diff-content {
+            margin-top: 6px;
+            font-size: 13px;
+            line-height: 1.6;
+            word-break: break-all;
+        }
+
+        .diff-text-old {
+            background: #fecaca;
+            text-decoration: line-through;
+            color: #991b1b;
+            border-radius: 2px;
+            padding: 0 2px;
+        }
+        .diff-text-new {
+            background: #bbf7d0;
+            color: #166534;
+            border-radius: 2px;
+            padding: 0 2px;
+        }
+
+        .diff-stats {
+            padding: 10px 12px;
+            background: #f1f5f9;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: #64748b;
+        }
+        .diff-stats .stat-num { font-weight: 700; color: #1e293b; }
+
+        .diff-filter {
+            padding: 8px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            gap: 6px;
+        }
+        .diff-filter button {
+            padding: 3px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: #fff;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .diff-filter button.active { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+
+        .doc-paragraph {
+            padding: 4px 8px;
+            margin: 2px 0;
+            border-radius: 4px;
+            font-size: 13px;
+            line-height: 1.7;
+            transition: background 0.15s;
+        }
+        .doc-paragraph.highlight-add { background: #dcfce7; }
+        .doc-paragraph.highlight-delete { background: #fee2e2; }
+        .doc-paragraph.highlight-modify { background: #fef9c3; }
+        .doc-paragraph.highlight-active { outline: 2px solid #3b82f6; }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #64748b;
+            font-size: 14px;
+        }
+        .loading .spinner {
+            width: 24px; height: 24px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error-msg {
+            text-align: center;
+            color: #ef4444;
+            padding: 40px;
+            font-size: 14px;
+        }
+
+        .group-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .group-count {
+            font-size: 11px;
+            color: #94a3b8;
+            background: #f1f5f9;
+            padding: 1px 6px;
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
-    <div class="top-bar">
-        <span>文档比对结果</span>
-        <span style="flex:1"></span>
-        <span id="statusText" style="color:#888">加载中...</span>
+    <div class="header">
+        <span class="title">docsx 文档比对</span>
+        <span class="file-name" id="headerFileNames"></span>
+        <span class="similarity" id="headerSimilarity"></span>
     </div>
-    <div class="main-body">
-        <div class="doc-area">
-            <div class="doc-panel" id="panelA">
-                <div class="panel-header">文档 A</div>
-                <div class="panel-body"><div class="loading-center">加载中...</div></div>
+
+    <div class="container" id="mainContainer">
+        <!-- 加载/错误状态 -->
+        <div class="loading" id="loadingState" th:if="${status != 'COMPLETED'}">
+            <div th:if="${status == 'FAILED'}">
+                <div class="error-msg">
+                    <p>比对失败</p>
+                    <p th:text="${error}" style="margin-top:8px;color:#94a3b8;font-size:12px;"></p>
+                </div>
             </div>
-            <div class="doc-panel" id="panelB">
-                <div class="panel-header">文档 B</div>
-                <div class="panel-body"><div class="loading-center">加载中...</div></div>
-            </div>
-        </div>
-        <div class="diff-panel-toggle" id="panelToggle" onclick="toggleDiffPanel()">›</div>
-        <div class="diff-panel" id="diffPanel">
-            <div class="diff-panel-header">差异列表</div>
-            <div class="diff-list" id="diffList">
-                <div class="loading-center">等待比对完成...</div>
+            <div th:if="${status != 'FAILED'}" style="display:flex;align-items:center;">
+                <div class="spinner"></div>
+                <span>正在比对中，请稍候...</span>
             </div>
         </div>
     </div>
 
-    <script th:inline="javascript">
-        var sessionId = [[${sessionId}]];
+    <script th:if="${status == 'COMPLETED'}" th:inline="javascript">
+        (function() {
+            const resultData = /*[[${resultJson}]]*/ '{}';
+            const fileName1 = /*[[${fileName1}]]*/ '';
+            const fileName2 = /*[[${fileName2}]]*/ '';
+            const sessionId = /*[[${sessionId}]]*/ '';
 
-        function toggleDiffPanel() {
-            var panel = document.getElementById('diffPanel');
-            var toggle = document.getElementById('panelToggle');
-            panel.classList.toggle('collapsed');
-            var isCollapsed = panel.classList.contains('collapsed');
-            toggle.classList.toggle('collapsed', isCollapsed);
-            toggle.textContent = isCollapsed ? '‹' : '›';
-        }
+            let result;
+            try {
+                result = typeof resultData === 'string' ? JSON.parse(resultData) : resultData;
+            } catch(e) {
+                document.getElementById('mainContainer').innerHTML =
+                    '<div class="error-msg">结果解析失败</div>';
+                return;
+            }
 
-        // TODO: Phase 3 - 加载比对结果、渲染差异面板、加载 OnlyOffice 文档
+            // 渲染头部信息
+            document.getElementById('headerFileNames').textContent =
+                `${fileName1} ↔ ${fileName2}`;
+            document.getElementById('headerSimilarity').textContent =
+                `相似度: ${(result.similarityScore * 100).toFixed(1)}%`;
+
+            // 构建三栏布局
+            const container = document.getElementById('mainContainer');
+            container.innerHTML = '';
+
+            // 统计差异
+            const totalList = result.totalList || {};
+            const entries = Object.entries(totalList);
+            let addCount = 0, deleteCount = 0, modifyCount = 0;
+            entries.forEach(([key, val]) => {
+                if (!val || !val.type) return;
+                if (val.type === 'add') addCount++;
+                else if (val.type === 'delete') deleteCount++;
+                else if (val.type === 'modify') modifyCount++;
+            });
+
+            // 左面板（文档 A）
+            const panelA = createPanel('文档 A: ' + fileName1, 'panelA');
+            container.appendChild(panelA.el);
+
+            // 右面板（文档 B）
+            const panelB = createPanel('文档 B: ' + fileName2, 'panelB');
+            container.appendChild(panelB.el);
+
+            // 差异面板
+            const diffPanel = createDiffPanel(entries, addCount, deleteCount, modifyCount);
+            container.appendChild(diffPanel);
+
+            // 渲染段落到面板
+            renderParagraphs(result, panelA.body, panelB.body, entries);
+
+            function createPanel(title, id) {
+                const panel = document.createElement('div');
+                panel.className = 'panel';
+                panel.id = id;
+
+                const header = document.createElement('div');
+                header.className = 'panel-header';
+                header.textContent = title;
+                panel.appendChild(header);
+
+                const body = document.createElement('div');
+                body.className = 'panel-body';
+                panel.appendChild(body);
+
+                return { el: panel, body };
+            }
+
+            function createDiffPanel(entries, addC, delC, modC) {
+                const panel = document.createElement('div');
+                panel.className = 'panel diff-panel';
+
+                const header = document.createElement('div');
+                header.className = 'panel-header';
+                header.textContent = `差异列表 (${entries.length})`;
+                panel.appendChild(header);
+
+                // 统计栏
+                const stats = document.createElement('div');
+                stats.className = 'diff-stats';
+                stats.innerHTML = `
+                    <span>新增: <span class="stat-num" style="color:#16a34a">${addC}</span></span>
+                    <span>删除: <span class="stat-num" style="color:#dc2626">${delC}</span></span>
+                    <span>修改: <span class="stat-num" style="color:#d97706">${modC}</span></span>
+                `;
+                panel.appendChild(stats);
+
+                // 筛选栏
+                const filter = document.createElement('div');
+                filter.className = 'diff-filter';
+                ['全部', '新增', '删除', '修改'].forEach((label, i) => {
+                    const btn = document.createElement('button');
+                    btn.textContent = label;
+                    if (i === 0) btn.classList.add('active');
+                    btn.onclick = () => filterDiffs(btn, ['all', 'add', 'delete', 'modify'][i]);
+                    filter.appendChild(btn);
+                });
+                panel.appendChild(filter);
+
+                // 差异列表
+                const body = document.createElement('div');
+                body.className = 'panel-body';
+                body.id = 'diffListBody';
+                panel.appendChild(body);
+
+                // 合并同类项渲染
+                renderDiffGroups(body, entries);
+
+                return panel;
+            }
+
+            function renderDiffGroups(container, entries) {
+                // 连续合并同类项（连续的 ADD 或 DELETE）
+                const groups = [];
+                let currentGroup = null;
+
+                entries.forEach(([key, val]) => {
+                    if (!val || !val.type) return;
+                    if (currentGroup && currentGroup.type === val.type
+                        && (val.type === 'add' || val.type === 'delete')) {
+                        currentGroup.items.push({ key, val });
+                    } else {
+                        currentGroup = { type: val.type, items: [{ key, val }] };
+                        groups.push(currentGroup);
+                    }
+                });
+
+                groups.forEach((group, gIdx) => {
+                    const div = document.createElement('div');
+                    div.className = 'diff-group';
+                    div.dataset.type = group.type;
+                    div.dataset.groupIdx = gIdx;
+
+                    const header = document.createElement('div');
+                    header.className = 'group-header';
+
+                    const typeSpan = document.createElement('span');
+                    typeSpan.className = 'diff-type ' + group.type;
+                    typeSpan.textContent = { add: '新增', delete: '删除', modify: '修改' }[group.type];
+                    header.appendChild(typeSpan);
+
+                    if (group.items.length > 1) {
+                        const countSpan = document.createElement('span');
+                        countSpan.className = 'group-count';
+                        countSpan.textContent = group.items.length + ' 处';
+                        header.appendChild(countSpan);
+                    }
+                    div.appendChild(header);
+
+                    // 差异内容
+                    const content = document.createElement('div');
+                    content.className = 'diff-content';
+                    group.items.forEach(item => {
+                        const p = document.createElement('div');
+                        p.style.marginTop = '4px';
+                        if (item.val.type === 'modify' && item.val.segments) {
+                            renderSegmentDiff(p, item.val);
+                        } else if (item.val.type === 'delete') {
+                            p.innerHTML = `<span class="diff-text-old">${escapeHtml(item.val.text1 || '')}</span>`;
+                        } else if (item.val.type === 'add') {
+                            p.innerHTML = `<span class="diff-text-new">${escapeHtml(item.val.text2 || '')}</span>`;
+                        }
+                        content.appendChild(p);
+                    });
+                    div.appendChild(content);
+
+                    // 点击跳转
+                    div.onclick = () => {
+                        document.querySelectorAll('.diff-group.active').forEach(el => el.classList.remove('active'));
+                        div.classList.add('active');
+                        highlightInPanels(group);
+                    };
+
+                    container.appendChild(div);
+                });
+            }
+
+            function renderSegmentDiff(container, item) {
+                const segments = item.segments || [];
+                if (segments.length === 0) {
+                    container.innerHTML = `<span class="diff-text-old">${escapeHtml(item.text1)}</span>
+                                           → <span class="diff-text-new">${escapeHtml(item.text2)}</span>`;
+                    return;
+                }
+                let html = '';
+                segments.forEach(seg => {
+                    if (seg.type === 'MODIFY' || seg.type === 'modify') {
+                        html += `<span class="diff-text-old">${escapeHtml(seg.text1)}</span>`;
+                        html += `<span class="diff-text-new">${escapeHtml(seg.text2)}</span>`;
+                    } else if (seg.type === 'DELETE' || seg.type === 'delete') {
+                        html += `<span class="diff-text-old">${escapeHtml(seg.text1)}</span>`;
+                    } else if (seg.type === 'ADD' || seg.type === 'add') {
+                        html += `<span class="diff-text-new">${escapeHtml(seg.text2)}</span>`;
+                    }
+                });
+                container.innerHTML = html;
+            }
+
+            function renderParagraphs(result, bodyA, bodyB, entries) {
+                const doc1Paras = result.doc1EditList || [];
+                const doc2Paras = result.doc2EditList || [];
+
+                // 简化渲染：按照 totalList 中记录的段落显示
+                // 将所有涉及的段落 ID 收集
+                const highlighted1 = new Map();
+                const highlighted2 = new Map();
+
+                entries.forEach(([key, val]) => {
+                    if (!val || !val.type) return;
+                    if (val.pId1) highlighted1.set(val.pId1, val.type);
+                    if (val.pId2) highlighted2.set(val.pId2, val.type);
+                });
+
+                // 渲染所有编辑对的段落
+                doc1Paras.forEach((p, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'doc-paragraph';
+                    div.textContent = p.content || '';
+                    div.dataset.pid = p.id;
+                    const hType = highlighted1.get(p.id);
+                    if (hType) div.classList.add('highlight-' + hType);
+                    bodyA.appendChild(div);
+                });
+
+                doc2Paras.forEach((p, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'doc-paragraph';
+                    div.textContent = p.content || '';
+                    div.dataset.pid = p.id;
+                    const hType = highlighted2.get(p.id);
+                    if (hType) div.classList.add('highlight-' + hType);
+                    bodyB.appendChild(div);
+                });
+
+                // 如果没有编辑对，显示提示
+                if (doc1Paras.length === 0) {
+                    bodyA.innerHTML = '<div style="color:#94a3b8;padding:20px;text-align:center">文档A段落将在此显示</div>';
+                }
+                if (doc2Paras.length === 0) {
+                    bodyB.innerHTML = '<div style="color:#94a3b8;padding:20px;text-align:center">文档B段落将在此显示</div>';
+                }
+            }
+
+            function highlightInPanels(group) {
+                // 清除之前的高亮
+                document.querySelectorAll('.highlight-active').forEach(el =>
+                    el.classList.remove('highlight-active'));
+
+                group.items.forEach(item => {
+                    if (item.val.pId1) {
+                        const el = document.querySelector(`[data-pid="${item.val.pId1}"]`);
+                        if (el) {
+                            el.classList.add('highlight-active');
+                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }
+                    if (item.val.pId2) {
+                        const el = document.querySelector(`[data-pid="${item.val.pId2}"]`);
+                        if (el) {
+                            el.classList.add('highlight-active');
+                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }
+                });
+            }
+
+            function filterDiffs(btn, type) {
+                btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.querySelectorAll('.diff-group').forEach(el => {
+                    if (type === 'all') {
+                        el.style.display = '';
+                    } else {
+                        el.style.display = el.dataset.type === type ? '' : 'none';
+                    }
+                });
+            }
+
+            function escapeHtml(str) {
+                if (!str) return '';
+                return str.replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                          .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+            }
+
+            // 若任务还在进行中则轮询
+        })();
+    </script>
+
+    <script th:if="${status != 'COMPLETED' and status != 'FAILED'}" th:inline="javascript">
+        (function() {
+            const sessionId = /*[[${sessionId}]]*/ '';
+            const checkInterval = setInterval(function() {
+                fetch('/api/compare/status/' + sessionId)
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.data && (d.data.status === 'COMPLETED' || d.data.status === 'FAILED')) {
+                            clearInterval(checkInterval);
+                            window.location.reload();
+                        }
+                    })
+                    .catch(() => {});
+            }, 2000);
+        })();
     </script>
 </body>
 </html>

@@ -20,8 +20,8 @@ public class AsyncConfig {
     @Autowired
     private DocsxProperties properties;
 
-    @Bean("compareTaskExecutor")
-    public Executor compareTaskExecutor() {
+    @Bean("docsxTaskExecutor")
+    public Executor docsxTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(properties.getTask().getThreadPoolSize());
         executor.setMaxPoolSize(properties.getTask().getThreadPoolSize() * 2);

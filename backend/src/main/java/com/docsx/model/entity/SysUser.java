@@ -21,7 +21,8 @@ public class SysUser {
     private Long id;
     private String username;
     private String password;
-    private String nickname;
+    private String nickName;
     private Integer status;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

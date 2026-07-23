@@ -20,21 +20,21 @@ import java.time.LocalDateTime;
 public class CompareTask {
     @TableId(type = IdType.AUTO)
     private Long id;
-    private String taskId;
     private String sessionId;
-    private String appId;
+    private String appKey;
     private String status;
     private String docType;
-    private String fileAName;
-    private String fileBName;
-    private String fileAPath;
-    private String fileBPath;
+    private String fileName1;
+    private String fileName2;
+    private String file1Path;
+    private String file2Path;
     private String resultJson;
     private BigDecimal similarity;
-    private String errorMsg;
+    private String errorMessage;
     private String callbackUrl;
     private LocalDateTime expiresAt;
     private LocalDateTime createdAt;
     private LocalDateTime startedAt;
     private LocalDateTime completedAt;
+    private LocalDateTime updatedAt;
 }

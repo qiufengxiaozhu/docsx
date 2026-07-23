@@ -21,9 +21,9 @@ public class Font {
     private Long id;
     private String fontName;
     private String fontFamily;
-    private String fileName;
     private String filePath;
     private Long fileSize;
     private Integer status;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

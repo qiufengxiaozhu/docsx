@@ -1,13 +1,15 @@
 package com.docsx.service;
 
-import com.docsx.model.dto.R;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.docsx.mapper.SysUserMapper;
+import com.docsx.model.entity.SysUser;
 import com.docsx.security.JwtUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-
 /**
+ * 认证服务
+ *
  * @Author Cursor
  * @Date 2026-07-23
  * @Version 1.0
@@ -15,15 +17,35 @@ import java.util.Map;
 @Service
 public class AuthService {
 
-    @Autowired
-    private JwtUtils jwtUtils;
+    private final SysUserMapper sysUserMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtils jwtUtils;
 
-    public R<Map<String, String>> login(String username, String password) {
-        // TODO: 校验用户名密码
-        if ("admin".equals(username) && "admin123".equals(password)) {
-            String token = jwtUtils.generateToken(username);
-            return R.ok(Map.of("token", token));
+    public AuthService(SysUserMapper sysUserMapper, PasswordEncoder passwordEncoder, JwtUtils jwtUtils) {
+        this.sysUserMapper = sysUserMapper;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtils = jwtUtils;
+    }
+
+    /**
+     * 登录认证
+     *
+     * @param username 用户名
+     * @param password 密码
+     * @return JWT token，null 表示失败
+     */
+    public String login(String username, String password) {
+        SysUser user = sysUserMapper.selectOne(
+                new LambdaQueryWrapper<SysUser>().eq(SysUser::getUsername, username));
+        if (user == null) {
+            return null;
         }
-        return R.fail(401, "用户名或密码错误");
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            return null;
+        }
+        if (user.getStatus() != null && user.getStatus() != 1) {
+            return null;
+        }
+        return jwtUtils.generateToken(user.getUsername());
     }
 }
